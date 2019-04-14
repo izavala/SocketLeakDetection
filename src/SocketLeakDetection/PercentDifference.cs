@@ -31,7 +31,7 @@ namespace SocketLeakDetection
             alphaS = 2.0 / (smallSample + 1);
             pValueL = counter.GetTcpCount(); // Set initial value for Large Sample Weighted Average
             pValueS = counter.GetTcpCount(); // Set initial value for Small Sample Weighted Average
-            Context.System.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(50), Self, new TcpCount(), ActorRefs.NoSender); //Schedule TCP counts to happen every 500 ms.
+            Context.System.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0), TimeSpan.FromMilliseconds(500), Self, new TcpCount(), ActorRefs.NoSender); //Schedule TCP counts to happen every 500 ms.
             
         }
 
@@ -52,6 +52,7 @@ namespace SocketLeakDetection
                     dif = (cValueS / cValueL) - 1.0;  // Get percent difference between the two readings.
                     if (dif > _maxDif)  // If difference exceeds max set difference alert supervisor. 
                         _supervisor.Tell(new Stat { CurretStatus = 2 });
+
                     else if (dif > 0 && dif > _percDif) // If difference is below Max difference but above warning level inform supervisor. 
                     {
                         _supervisor.Tell(new Stat { CurretStatus = 1 });

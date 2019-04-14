@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿
+using Akka.Actor;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,7 +11,10 @@ namespace SocketLeakDetection
         static void Main(string[] args)
         {
             var Sys = ActorSystem.Create("Test");
-            // var watcher = Sys.ActorOf(Props.Create(()=>new P))
+            //var watcher = Sys.ActorOf(Props.Create(() => new Watcher()));
+            //var sup = Sys.ActorOf(Props.Create(() => new Supervisor(Sys)));
+            
+            
         }
     }
 }
