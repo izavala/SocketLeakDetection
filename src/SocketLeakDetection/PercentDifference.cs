@@ -11,8 +11,8 @@ namespace SocketLeakDetection
     {
         private readonly double alphaL;
         private readonly double alphaS;
-        private readonly float _percDif;
-        private readonly float _maxDif;
+        private readonly double _percDif;
+        private readonly double _maxDif;
         private IActorRef _supervisor;
         private ITcpCounter _tCounter;
         private double pValueL;
@@ -20,41 +20,46 @@ namespace SocketLeakDetection
         private double pValueS;
         private double cValueS;
         private bool timerFlag = false;
+        public bool primed = false;
+        public int c;
 
-        public PercentDifference(float perDif,float maxDif, int largeSample, int smallSample, ITcpCounter counter, IActorRef Supervisor)
+        public PercentDifference(double perDif,double maxDif, int largeSample, int smallSample, ITcpCounter counter, IActorRef Supervisor)
         {
             _supervisor = Supervisor;
             _percDif = perDif;
             _maxDif = maxDif;
             _tCounter = counter;
-            alphaL = 2 / (largeSample + 1);
-            alphaS = 2 / (smallSample + 1);
+            alphaL = 2.0 / (largeSample + 1);
+            alphaS = 2.0 / (smallSample + 1);
             pValueL = counter.GetTcpCount();
             cValueL = EMWA(alphaL, pValueL, counter.GetTcpCount());
             pValueS = counter.GetTcpCount();
             cValueS = EMWA(alphaS, pValueS, counter.GetTcpCount());
-            Context.System.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(500), Self, new TcpCount(), ActorRefs.NoSender);
+            Context.System.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(50), Self, new TcpCount(), ActorRefs.NoSender);
+            c = 0;
         }
 
         protected override void OnReceive(object message)
         {
-            if(message is TcpCounter)
+        
+            if (message is TcpCount)
             {
-                var count = _tCounter.GetTcpCount();
                 
+                var count = _tCounter.GetTcpCount();
                 cValueL = EMWA(alphaL, pValueL, count);
                 pValueL = cValueL;
                 cValueS = EMWA(alphaS, pValueS, count);
                 pValueS = cValueS;
                 double dif;
+
                 if (pValueL != 0)
                 {
-                    dif = 1 - (cValueS / pValueL);
+                    dif = (cValueS / cValueL) - 1.0;
                     if (dif > _maxDif)
-                        _supervisor.Tell(new Messages.Status { curretStatus = 2 });
+                        _supervisor.Tell(new Stat { CurretStatus = 2 });
                     else if (dif > 0 && dif > _percDif)
                     {
-                        _supervisor.Tell(new Messages.Status { curretStatus = 1 });
+                        _supervisor.Tell(new Stat { CurretStatus = 1 });
                         if (!timerFlag)
                         {
                             Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(60), Self, new TimerExpired(), ActorRefs.NoSender);
@@ -68,7 +73,7 @@ namespace SocketLeakDetection
             }
             if(message is TimerExpired)
             {
-                _supervisor.Tell(new Messages.Status { curretStatus = 2 });
+                _supervisor.Tell(new Stat { CurretStatus = 2 });
             }
         }
 

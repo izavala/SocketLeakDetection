@@ -8,6 +8,6 @@ namespace SocketLeakDetection
     {
         public class TcpCount { }
         public class TimerExpired { }
-        public class Status { public int curretStatus { get; set; } }
+        public class Stat { public int CurretStatus { get; set; } }
     }
 }
