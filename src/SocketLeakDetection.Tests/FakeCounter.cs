@@ -7,26 +7,21 @@ namespace SocketLeakDetection.Tests
     class FakeCounter : ITcpCounter
     {
         int _currentCount;
-        int _inc;
-        int count; 
-        public FakeCounter(int increments, int currentCount)
+        public FakeCounter(int currentCount)
         {
             _currentCount = currentCount;
-            _inc = increments;
-            count = 0;
+        }
+        public FakeCounter()
+        {
+            _currentCount = 0;
         }
         public int GetTcpCount()
         {
-            count += 1;
-            if (count < 1000 && count > 950)
-            {
-                _currentCount = _currentCount + _inc;
-                return _currentCount;
-            }
-            else
-            {
-                return _currentCount;
-            }
+            return _currentCount;
+        }
+        public void IncreaseCount(int increase)
+        {
+            _currentCount += increase;
         }
     }
 }
