@@ -13,7 +13,7 @@ namespace SocketLeakDetection.Tests
 
     {
 
-        [Fact]
+        [Fact(Skip = "Waiting for API stabilization")]
         public void MessageShouldBeSentWhenRiseIsHigh()
         {
             var counter = new FakeCounter(600);
