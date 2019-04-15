@@ -7,7 +7,7 @@ using static SocketLeakDetection.Messages;
 
 namespace SocketLeakDetection
 {
-    public class PercentDifference: UntypedActor
+    public class SocketLeakTest: UntypedActor
     {
         private readonly double alphaL; 
         private readonly double alphaS;
@@ -33,7 +33,7 @@ namespace SocketLeakDetection
         /// <param name="smallSample">The sample size we want to use for the small sample EMWA</param>
         /// <param name="counter">TCP counter class we want to use to determine the number of opened TCP connections</param>
         /// <param name="Supervisor">Actor Reference for the Supervisor Actor in charge of terminating Actor System</param>
-        public PercentDifference(long maxCon, double perDif,double maxDif, int largeSample, int smallSample, ITcpCounter counter, IActorRef Supervisor)
+        public SocketLeakTest(long maxCon, double perDif,double maxDif, int largeSample, int smallSample, ITcpCounter counter, IActorRef Supervisor)
         {
             _maxCon = maxCon;
             _supervisor = Supervisor;

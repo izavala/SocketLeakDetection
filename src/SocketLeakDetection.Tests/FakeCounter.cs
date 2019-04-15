@@ -25,7 +25,7 @@ namespace SocketLeakDetection.Tests
         public int GetTcpCount()
         {
             counter += 1;
-            if (counter > 10 && counter < 100)
+            if (counter > 10 && counter < 1000)
                 _currentCount += 10;
             Console.WriteLine("TCP : {0}", _currentCount);
             return _currentCount;
