@@ -6,8 +6,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>Your description here.</Description>
     <ApplicationIcon />
-    <OutputType>Exe</OutputType>
-    <StartupObject>SocketLeakDetection.Program</StartupObject>
+    <OutputType>Library</OutputType>
+    <StartupObject></StartupObject>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -23,7 +23,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="akka" Version="1.3.12" />
+    <PackageReference Include="Akka" Version="$(AkkaVersion)" />
   </ItemGroup>
   <ItemGroup>
     <None Update="akka.hocon">

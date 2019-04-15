@@ -6,7 +6,7 @@ using static SocketLeakDetection.Messages;
 
 namespace SocketLeakDetection
 {
-    class Watcher:ReceiveActor
+   public class Watcher:ReceiveActor
     {
         public Watcher()
         {

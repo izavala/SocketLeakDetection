@@ -15,7 +15,7 @@ namespace SocketLeakDetection.Tests
         [Fact]
         public void Should_Load_Configuration_From_Hocon_File()
         {
-            Config testConfig = DefaultConfig.WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("akka.hocon")));
+            Config testConfig = DefaultConfig.WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("akkaTest.hocon")));
             var System = ActorSystem.Create("test", testConfig);
             var x = System.ActorOf(Props.Create(() => new Supervisor(Sys,testConfig)));
             var config = System.Settings.Config.GetConfig("SLD");

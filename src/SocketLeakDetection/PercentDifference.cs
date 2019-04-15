@@ -20,9 +20,11 @@ namespace SocketLeakDetection
         private double pValueS; // Past Average for Small Sample
         private double cValueS; // Current Average for Small Sample
         private bool timerFlag = false; //Flag to signal increase in TCP connections
+        private long _maxCon = 16777214; //Theoretical max number of possible connections https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc758980(v=ws.10)
 
-        public PercentDifference(double perDif,double maxDif, int largeSample, int smallSample, ITcpCounter counter, IActorRef Supervisor)
+        public PercentDifference(long maxCon, double perDif,double maxDif, int largeSample, int smallSample, ITcpCounter counter, IActorRef Supervisor)
         {
+            _maxCon = maxCon;
             _supervisor = Supervisor;
             _percDif = perDif;
             _maxDif = maxDif;
@@ -31,26 +33,28 @@ namespace SocketLeakDetection
             alphaS = 2.0 / (smallSample + 1);
             pValueL = counter.GetTcpCount(); // Set initial value for Large Sample Weighted Average
             pValueS = counter.GetTcpCount(); // Set initial value for Small Sample Weighted Average
-            Context.System.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0), TimeSpan.FromMilliseconds(500), Self, new TcpCount(), ActorRefs.NoSender); //Schedule TCP counts to happen every 500 ms.
+            Context.System.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0), TimeSpan.FromMilliseconds(500), Self, counter, ActorRefs.NoSender); //Schedule TCP counts to happen every 500 ms.
             
         }
 
         protected override void OnReceive(object message)
         {
-        
             if (message is TcpCount)
             {
+                double dif;
                 var count = _tCounter.GetTcpCount();
                 cValueL = EMWA(alphaL, pValueL, count);
                 pValueL = cValueL;
                 cValueS = EMWA(alphaS, pValueS, count);
                 pValueS = cValueS;
-                double dif;
+                Console.WriteLine("Small:{0}", cValueS);
+                Console.WriteLine("Large:{0}", cValueL);
 
-                if (pValueL != 0)
+                if (cValueL > 0  && cValueL<cValueS)
                 {
                     dif = (cValueS / cValueL) - 1.0;  // Get percent difference between the two readings.
-                    if (dif > _maxDif)  // If difference exceeds max set difference alert supervisor. 
+                    Console.WriteLine("Dif:{0}", dif);
+                    if (dif > _maxDif || count>_maxCon)  // Send termination message if max number of connections reached or difference exceeds max. 
                         _supervisor.Tell(new Stat { CurretStatus = 2 });
 
                     else if (dif > 0 && dif > _percDif) // If difference is below Max difference but above warning level inform supervisor. 
