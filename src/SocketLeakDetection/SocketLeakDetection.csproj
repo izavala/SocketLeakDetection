@@ -8,6 +8,7 @@
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
     <StartupObject>SocketLeakDetection.Program</StartupObject>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
 
@@ -23,6 +24,11 @@
 
   <ItemGroup>
     <PackageReference Include="akka" Version="1.3.12" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="akka.hocon">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

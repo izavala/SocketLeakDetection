@@ -17,15 +17,15 @@ namespace SocketLeakDetection.Tests
         public void MessageShouldBeSentWhenRiseIsHigh()
         {
             var counter = new FakeCounter(600);
-            var Watcher = Sys.ActorOf(Props.Create( ()=> new PercentDifference(0.1,0.2,120,20,counter,TestActor)));
+            var Watcher = Sys.ActorOf(Props.Create(() => new PercentDifference(0.1, 0.2, 120, 20, counter, TestActor)));
             // AwaitAssert(Assert., TimeSpan.FromMinutes(10))
-            for(var i = 0; i<1000000; i++)
+            for (var i = 0; i < 1000000; i++)
             {
-                if(i%1000==0)
-                counter.IncreaseCount(1);
+                if (i % 1000 == 0)
+                    counter.IncreaseCount(1);
             }
             ExpectMsg<Stat>().CurretStatus.Equals(2);
-;            
+
         }
     }
 

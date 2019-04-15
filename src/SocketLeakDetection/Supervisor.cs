@@ -7,13 +7,13 @@ using static SocketLeakDetection.Messages;
 
 namespace SocketLeakDetection
 {
-    class Supervisor : ReceiveActor
+    public class Supervisor : ReceiveActor
     {
 
         protected ILoggingAdapter Log = Context.GetLogger();
-        public Supervisor(ActorSystem System)
+        public Supervisor(ActorSystem System, Config config)
         {
-            GetConfig();
+            GetConfig(config);
             System.ActorOf(Props.Create(() => new PercentDifference(PercentDifference, MaxDifference, LargeSample, SmallSample, new TcpCounter(), Self)));
             Receive<Stat>(s =>
             {
@@ -30,14 +30,14 @@ namespace SocketLeakDetection
             });
         }
 
-        private void GetConfig()
+        private void GetConfig(Config config)
         {
-            Config actorConfig;
-            actorConfig = ConfigurationFactory.ParseString(File.ReadAllText("akka.hocon"));
+            var actorConfig = config;
 
-            var myConfig = actorConfig.GetConfig("SLD");
+            var myConfig = config.GetConfig("SLD");
             if (myConfig != null)
             {
+                
                 var pd = Convert.ToDouble(myConfig.GetString("Percent-Difference", "0.25"));
                 if (pd < 1 && pd > 0)
                     PercentDifference = pd;
@@ -66,7 +66,7 @@ namespace SocketLeakDetection
                 }
 
                 var ss = Convert.ToInt32(myConfig.GetString("Small-Sample", "20"));
-                if (ss > ls)
+                if (ss < ls)
                     SmallSample = ss;
                 else
                 {
