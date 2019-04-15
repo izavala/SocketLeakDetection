@@ -1,12 +1,11 @@
-﻿
-using Akka.Actor;
+﻿using Akka.Actor;
 using Akka.Configuration;
+using SocketLeakDetection;
+using SocketLeakDetection.Tests;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
-namespace SocketLeakDetection
+namespace FakeCounterSample
 {
     class Program
     {
@@ -15,9 +14,9 @@ namespace SocketLeakDetection
             var Sys = ActorSystem.Create("Test");
             var Config = ConfigurationFactory.ParseString(File.ReadAllText("akka.hocon"));
             var watcher = Sys.ActorOf(Props.Create(() => new Watcher()));
-            var sup = Sys.ActorOf(Props.Create(() => new Supervisor(Sys, Config)));
-
+            var sup = Sys.ActorOf(Props.Create(() => new Supervisor(Sys, Config, new FakeCounter(600))));
             Sys.WhenTerminated.Wait();
+
         }
     }
 }

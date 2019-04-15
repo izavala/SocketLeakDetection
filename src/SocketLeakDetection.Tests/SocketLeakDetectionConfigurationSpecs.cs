@@ -17,7 +17,7 @@ namespace SocketLeakDetection.Tests
         {
             Config testConfig = DefaultConfig.WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("akkaTest.hocon")));
             var System = ActorSystem.Create("test", testConfig);
-            var x = System.ActorOf(Props.Create(() => new Supervisor(Sys,testConfig)));
+            var x = System.ActorOf(Props.Create(() => new Supervisor(Sys,testConfig, new FakeCounter())));
             var config = System.Settings.Config.GetConfig("SLD");
             Assert.NotNull(config);
             Assert.Equal("0.3", config.GetString("Percent-Difference"));

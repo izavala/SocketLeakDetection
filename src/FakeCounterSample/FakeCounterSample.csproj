@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\SocketLeakDetection\SocketLeakDetection.csproj" />
+    <ProjectReference Include="..\SocketLeakDetection.Tests\SocketLeakDetection.Tests.csproj" />
+    <ProjectReference Include="..\SocketLeakDetection\SocketLeakDetection.csproj" />
   </ItemGroup>
 
 </Project>

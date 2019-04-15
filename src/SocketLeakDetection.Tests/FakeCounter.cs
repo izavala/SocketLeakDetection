@@ -4,6 +4,9 @@ using System.Text;
 
 namespace SocketLeakDetection.Tests
 {
+    /// <summary>
+    /// Fake counter will increase the count for a set range of request for the count. 
+    /// </summary>
     public class FakeCounter : ITcpCounter
     {
         int _currentCount;
@@ -22,7 +25,7 @@ namespace SocketLeakDetection.Tests
         public int GetTcpCount()
         {
             counter += 1;
-            if (counter > 10 && counter < 40 || counter > 70 && counter < 100)
+            if (counter > 10 && counter < 100)
                 _currentCount += 10;
             Console.WriteLine("TCP : {0}", _currentCount);
             return _currentCount;
