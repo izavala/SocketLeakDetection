@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using Akka.Actor;
 
 namespace SocketLeakDetection
@@ -20,9 +21,10 @@ namespace SocketLeakDetection
         public const int DefaultShortSampleSize = 10;
         public static readonly TimeSpan DefaultTcpPollInterval = TimeSpan.FromMilliseconds(500);
         public static readonly TimeSpan DefaultBreachDuration = TimeSpan.FromSeconds(DefaultLongSampleSize/2.0);
+        public const IPAddress DefaultAddress = null;
 
         public SocketLeakDetectorSettings(double maxDifference = DefaultMaxDifference, int maxConnections = DefaultMaxConnections, int minConnections = DefaultMinConnections,
-                int smallSampleSize = DefaultShortSampleSize, int largeSampleSize = DefaultLongSampleSize, TimeSpan? rate = null, TimeSpan? breachDuration = null)
+                int smallSampleSize = DefaultShortSampleSize, int largeSampleSize = DefaultLongSampleSize, TimeSpan? rate = null, TimeSpan? breachDuration = null, IPAddress address = DefaultAddress )
         {
             if(minConnections < 1)
                 throw new ArgumentOutOfRangeException(nameof(minConnections), "Min connections must be greater than or equal to 1.");
@@ -48,6 +50,11 @@ namespace SocketLeakDetection
             else
                 throw new ArgumentOutOfRangeException(nameof(smallSampleSize), "smallSampleSize must greater than largeSampleSize");
 
+            if (address is null)
+                throw new ArgumentOutOfRangeException(nameof(address), "No IPAddress provided");
+            else
+                InterfaceAddress = address;
+
             PortCheckInterval = rate ?? DefaultTcpPollInterval;
             BreachDuration = breachDuration ?? DefaultBreachDuration;
             MinConnections = minConnections;
@@ -58,6 +65,7 @@ namespace SocketLeakDetection
         public int ShortSampleSize { get; set; }
         public int LongSampleSize { get; set; }
         public TimeSpan PortCheckInterval { get; set; }
+        public IPAddress InterfaceAddress { get; set; }
 
         /// <summary>
         /// How long the <see cref="LeakDetector"/> needs report true prior
@@ -69,7 +77,7 @@ namespace SocketLeakDetection
         {
             return $"SocketLeakDetectorSettings(MaxDifference={MaxDifference}, MaxConnections={MaxConnections}, MinConnections={MinConnections}" +
                    $"ShortSampleSize={ShortSampleSize}, LargeSampleSize={LongSampleSize}," +
-                   $"PortCheckInterval={PortCheckInterval}, BreachDuration={BreachDuration})";
+                   $"PortCheckInterval={PortCheckInterval}, BreachDuration={BreachDuration}, IPAddress={InterfaceAddress}";
         }
 
     }
