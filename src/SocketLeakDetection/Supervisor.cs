@@ -21,6 +21,7 @@ namespace SocketLeakDetection
         {
             GetConfig(config);
             var settings = new SocketLeakDetectorSettings();
+
             System.ActorOf(Props.Create(() => new SocketLeakDetectorActor(settings, counter, Self)));
             Receive<Stat>(s =>
             {
