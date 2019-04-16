@@ -9,7 +9,12 @@ namespace SocketLeakDetection
 {
     public class TcpCounter : ITcpCounter
     {
-        public int GetTcpCount(IPAddress Address)
+        IPAddress Address;
+        public TcpCounter(IPAddress address)
+        {
+            Address = address;
+        }
+        public int GetTcpCount()
         {
             IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
             IPEndPoint[] iPEndPoints = ipProperties.GetActiveTcpListeners();

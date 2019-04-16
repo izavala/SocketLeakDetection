@@ -185,7 +185,7 @@ namespace SocketLeakDetection
         {
             if (message is TcpCount)
             {
-                var count = _tCounter.GetTcpCount(_settings.InterfaceAddress); //Get TCP count
+                var count = _tCounter.GetTcpCount(); //Get TCP count
                 _leakDetector.Next(count);
 
                 if (_leakDetector.ShouldFail)

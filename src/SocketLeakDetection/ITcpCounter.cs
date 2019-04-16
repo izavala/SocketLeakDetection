@@ -7,6 +7,6 @@ namespace SocketLeakDetection
 {
     public interface ITcpCounter
     {
-          int GetTcpCount(IPAddress Address);
+          int GetTcpCount();
     }
 }

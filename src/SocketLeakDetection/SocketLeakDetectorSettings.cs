@@ -21,10 +21,10 @@ namespace SocketLeakDetection
         public const int DefaultShortSampleSize = 10;
         public static readonly TimeSpan DefaultTcpPollInterval = TimeSpan.FromMilliseconds(500);
         public static readonly TimeSpan DefaultBreachDuration = TimeSpan.FromSeconds(DefaultLongSampleSize/2.0);
-        public const IPAddress DefaultAddress = null;
+        
 
         public SocketLeakDetectorSettings(double maxDifference = DefaultMaxDifference, int maxConnections = DefaultMaxConnections, int minConnections = DefaultMinConnections,
-                int smallSampleSize = DefaultShortSampleSize, int largeSampleSize = DefaultLongSampleSize, TimeSpan? rate = null, TimeSpan? breachDuration = null, IPAddress address = DefaultAddress )
+                int smallSampleSize = DefaultShortSampleSize, int largeSampleSize = DefaultLongSampleSize, TimeSpan? rate = null, TimeSpan? breachDuration = null )
         {
             if(minConnections < 1)
                 throw new ArgumentOutOfRangeException(nameof(minConnections), "Min connections must be greater than or equal to 1.");
@@ -49,11 +49,7 @@ namespace SocketLeakDetection
                 ShortSampleSize = smallSampleSize;
             else
                 throw new ArgumentOutOfRangeException(nameof(smallSampleSize), "smallSampleSize must greater than largeSampleSize");
-
-            if (address is null)
-                throw new ArgumentOutOfRangeException(nameof(address), "No IPAddress provided");
-            else
-                InterfaceAddress = address;
+            
 
             PortCheckInterval = rate ?? DefaultTcpPollInterval;
             BreachDuration = breachDuration ?? DefaultBreachDuration;
@@ -77,7 +73,7 @@ namespace SocketLeakDetection
         {
             return $"SocketLeakDetectorSettings(MaxDifference={MaxDifference}, MaxConnections={MaxConnections}, MinConnections={MinConnections}" +
                    $"ShortSampleSize={ShortSampleSize}, LargeSampleSize={LongSampleSize}," +
-                   $"PortCheckInterval={PortCheckInterval}, BreachDuration={BreachDuration}, IPAddress={InterfaceAddress}";
+                   $"PortCheckInterval={PortCheckInterval}, BreachDuration={BreachDuration}";
         }
 
     }
