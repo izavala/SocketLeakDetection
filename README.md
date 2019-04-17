@@ -83,17 +83,17 @@ Using this behavior, we compare the two EMWA's and determine the difference betw
 
 ###Implementation
 
-The project is intended to help detect and warn when an increase in TCP port count is expected for one or more network interfaces. The project will be implemented by the creation of a `TcpPortUseSupervise` actor. This actor will be created using the `ActorSystem` that we want to monitor and terminate if a large increase in TCP connections is detected. 
+The project is intended to help detect and warn when an increase in TCP port count is expected for one or more network interfaces. The project will be implemented by the creation of a `TcpPortUseSupervisor` actor. This actor will be created using the `ActorSystem` that we want to monitor and terminate if a large increase in TCP connections is detected. 
 
 ![A work flow of the below TCP port detection](docs/images/Message-Decision-Tree.png)
 
-The `TcpPortUseSupervise` actor will create a `TcpPortMonitoring` actor which will scan all of the open TCP ports and group these by the local endpoints.  The count for each local endpoint will then be sent back to the `TcpPortUseSupervise` actor. 
+The `TcpPortUseSupervisor actor will create a ` TcpPortMonitoringActor which will scan all of the open TCP ports and group these by the local endpoints.  The count for each local endpoint will then be sent back to the `TcpPortUseSupervisor actor. 
 
-The `TcpPortUseSupevise` actor will then take these readings and determine if the number of TCP ports exceeds our normal operating numbers(`MinPorts`). If the `MinPorts` number is exceeded, the actor will then signal the `SocketLeakdetectorActor` to begin monitoring the TCP ports for that particular endpoint. 
+The `TcpPortUseSupevisor actor will then take these readings and determine if the number of TCP ports exceeds our normal operating numbers(MinPorts`). If the `MinPorts` number is exceeded, the actor will then signal the `SocketLeakDetectorActor` to begin monitoring the TCP ports for that particular endpoint. 
 
-The `SocketLeakDetectorActor` will then continue to monitor the TCP port count for the specified endpoint through the use of the EWMA. When a fast increase in the TCP count is observed that exceeds the defined `MaxDifference`, a warning will be logged and a timer will be started. If the increase does not normalize within the set `BreachDuration` period, this actor will then signal the `TcpPortUseSupevise` actor that we need to terminate the `ActorSystem` to prevent port exhaustion. 
+The `SocketLeakDetectorActor` will then continue to monitor the TCP port count for the specified endpoint through the use of the EWMA. When a fast increase in the TCP count is observed that exceeds the defined `MaxDifference`, a warning will be logged and a timer will be started. If the increase does not normalize within the set `BreachDuration` period, this actor will then signal the `TcpPortUseSupevisor actor that we need to terminate the `ActorSystem` to prevent port exhaustion. 
 
-If the `SocketLeakDetectorActor` does not see a fast increase in the TCP port count but does see a continuous increase in the TCP port count, it will continue to monitor that local endpoint. If the number of TCP ports exceeds the `MaxPorts` allowed and does not drop below the `MinPorts` withing the `BreachDuration` period, the `SocketLeakDetectorActor` will send a termination message back to the `SocketLeakDetectorActor` Actor. 
+If the `SocketLeakDetectorActor` does not see a fast increase in the TCP port count but does see a continuous increase in the TCP port count, it will continue to monitor that local endpoint. If the number of TCP ports exceeds the `MaxPorts` allowed and does not drop below the `MaxPorts within the `BreachDuration` period, the `SocketLeakDetectorActor` will send a termination message back to the `SocketLeakDetectorActor` Actor. 
 
 A `BreachDuration` period is set, to allow the system to normalize in the event that the system experiences a short increase in the TCP port count but is able to lower these ports back to a normal state without outside intervention. 
 
@@ -101,23 +101,23 @@ A `BreachDuration` period is set, to allow the system to normalize in the event 
 
 ###Configuration
 
-You will only need to create the `TcpPortUseSupervisor` actor to be able to monitor the TCP port growth in your system. This actor comes with default settings and does not require you to pass any settings if you do not want to edit these. You create your own `SocketLeakDetectorSettigns` to modify how responsive you want your system to be. The following are the allowed configurations: 
+You will only need to create the `TcpPortUseSupervisor` actor to be able to monitor the TCP port growth in your system. This actor comes with default settings and does not require you to pass any settings if you do not want to edit these. You can however, create your own `SocketLeakDetectorSettigns` to modify how responsive you want your system to be. The following are the allowed configurations: 
 
 ####SocketLeakDetectorSettings
 
-**MaxPorts**: The maximum allowed TCP ports for a set endpoint. If a port count for a particular endpoint exceeds this number, we will signal for the `ActorSystem` to be shutdown if it does not fall below the `MinPorts` count under the `BreachDuration` period. 
+**MaxPorts**: The maximum allowed TCP ports for a set endpoint. If a port count for a particular endpoint exceeds this number, we will signal for the `ActorSystem` to be shutdown if it does not fall below the `MaxPorts` count under the `BreachDuration` period. 
 
-If you will like to have a maximum number of ports allowed before the `ActorSystem` is terminated you will want to lower this number.  
- 
+If you will like to have a maximum number of ports allowed before the `ActorSystem` is terminated you will want to lower this number. 
+
 ***The default value*** is set to 65536 ports, which is the theoretical max allowed number of ports you can have on one endpoint. Please note you want the `MaxPorts` to be larger than your `MinPorts`.
 
 **MinPorts**: When a particular endpoint port count exceeds this number the `TcpPortUseSupervisor` will begin calculating the EWMA to see if a large increase is detected. 
 
-You will want to set this number above the normal expected port count you will expect for your system.
+You will want to set this number above the normal expected port count you plan to see for your system.
 
-***The default value*** set for this is for 100. 
+***The default value*** set for this is for 100 ports. 
 
-**MaxDifference**: This will signal the max difference between the short sample EWMA and the long sample EWMA. If the difference between the two EMWA remains above `MaxDifference` for longer than the set `BreachDuration`, the system will be terminated. 
+**MaxDifference**: This will signal the max difference between the short sample EWMA and the long sample EWMA allowed. If the difference between the two EMWA remains above `MaxDifference` for longer than the set `BreachDuration`, the system will be terminated. 
 
 The faster the growth in TCP, the larger the difference you will see between these two. You will want to set this number to a lower value if want your system to be more sensitive to fast change. 
 
@@ -138,36 +138,49 @@ The faster the growth in TCP, the larger the difference you will see between the
 
 ***The default value*** will be of 1 second. 
 
-
-
 **BreachDuration**: The max time you would like to give the system to recover from an observed TCP port growth, if the `MaxDifference` or the `MaxPorts` are exceeded. If either are exceeded and the system does not fall below the `MaxDifference` or `MaxPorts`respectively, the `ActorSystem` will be terminated. 
-
 
 ***The default value*** will be for 25 seconds. 
 
 
-##Setting up the TcpPortUseSupervisor actor
 
-The three different ways to setup your actor can be seeing below: 
+**IPAddress**: You can pass in a list of `IPAddress` as a parameter to you `TcpPortUseSupervisor ` actor that you wish to whitelist. When you pass in a list of `IPAddress` only these endpoints will be monitored. 
 
-**Setting up your actor with default settings and for it to monitor all local endpoints**
+***The default value*** for this parameter is to look for all the endpoints. If you do not wish to monitor all of the endpoints you can pass in a list with one or more `IPAddress`. 
+
+##Setting up the TcpPortUseSupervisor actors
+
+Three ways to setup your `TcpPortUseSupervisor` can be seen below: 
+
+**Setting up your actor with default settings to monitor all local endpoints**
 
 ```csharp
 			var actorSystem = ActorSystem.Create("PortDetector", "akka.loglevel = DEBUG"); 
             var supervisor = actorSystem.ActorOf(Props.Create(() => new TcpPortUseSupervisor()), "tcpPorts");
-            var tcp = actorSystem.ActorOf(Props.Create(() => new TcpHostActor()), "tcp");
             await actorSystem.WhenTerminated;
 ```
 
-**Setting up your actor with customized settings and have it monitor all local endpoints**
+**Setting up your actor with customized settings to monitor all local endpoints**
 
 ```csharp
-			var actorSystem = ActorSystem.Create("PortDetector", "akka.loglevel = DEBUG"); 
-			var 
+			var actorSystem = ActorSystem.Create("PortDetector", "akka.loglevel = DEBUG");
+            SocketLeakDetectorSettings settings = new SocketLeakDetectorSettings
+            {
+                MaxDifference = 0.3,
+                MaxPorts = 120,
+                MinPorts = 80,
+                LongSampleSize = 120,
+                ShortSampleSize = 80,
+                BreachDuration = TimeSpan.FromSeconds(30),
+                PortCheckInterval = TimeSpan.FromMilliseconds(500)
+            };
 
+            var supervisor = actorSystem.ActorOf(Props.Create(() => new TcpPortUseSupervisor(settings)), "tcpPorts");
+```
 
-            var supervisor = actorSystem.ActorOf(Props.Create(() => new TcpPortUseSupervisor()), "tcpPorts");
-            var tcp = actorSystem.ActorOf(Props.Create(() => new TcpHostActor()), "tcp");
-            await actorSystem.WhenTerminated;
+***Setting up your actor with only one whitelisted address***
+
+```csharp 
+x           var actorSystem = ActorSystem.Create("PortDetector", "akka.loglevel = DEBUG");               List<IPAddress> iPList = new List<IPAddress> { IPAddress.Parse("127.0.0.1") };	               var supervisor = actorSystem.ActorOf(Props.Create(() => new TcpPortUseSupervisor(iPList)), "tcpPorts");csharp 
 ```
 
