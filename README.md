@@ -85,7 +85,7 @@ Using this behavior, we compare the two EMWA's and determine the difference betw
 
 The project is intended to help detect and warn when an increase in TCP port count is expected for one or more network interfaces. The project will be implemented by the creation of a `TcpPortUseSupervise` actor. This actor will be created using the `ActorSystem` that we want to monitor and terminate if a large increase in TCP connections is detected. 
 
-[A work flow of the below TCP port detection](docs/images/Message-Decision-Tree.png)
+![A work flow of the below TCP port detection](docs/images/Message-Decision-Tree.png)
 
 The `TcpPortUseSupervise` actor will create a `TcpPortMonitoring` actor which will scan all of the open TCP ports and group these by the local endpoints.  The count for each local endpoint will then be sent back to the `TcpPortUseSupervise` actor. 
 
@@ -97,19 +97,77 @@ If the `SocketLeakDetectorActor` does not see a fast increase in the TCP port co
 
 A `BreachDuration` period is set, to allow the system to normalize in the event that the system experiences a short increase in the TCP port count but is able to lower these ports back to a normal state without outside intervention. 
 
-[The signal shutdown logic can be seen in the below diagram](docs/images/Message-Decision-Tree.png)
+![The signal shutdown logic can be seen in the below diagram](docs/images/Message-Decision-Tree.png)
 
 ###Configuration
 
-You will only need to create the `TcpPortUseSupervise` actor to be able to monitor the TCP port growth in your system. This actor comes with default settings and does not require you to pass any settings if you do not want to edit these. You create your own `SocketLeakDetectorSettigns` to modify how responsive you want your system to be. The following are the allowed configurations: 
+You will only need to create the `TcpPortUseSupervisor` actor to be able to monitor the TCP port growth in your system. This actor comes with default settings and does not require you to pass any settings if you do not want to edit these. You create your own `SocketLeakDetectorSettigns` to modify how responsive you want your system to be. The following are the allowed configurations: 
 
 ####SocketLeakDetectorSettings
 
-MaxPorts: The maximum allowed TCP ports for a set endpoint. If a port count for a particular endpoint exceeds this number, we will signal for a system shutdown.
+**MaxPorts**: The maximum allowed TCP ports for a set endpoint. If a port count for a particular endpoint exceeds this number, we will signal for the `ActorSystem` to be shutdown if it does not fall below the `MinPorts` count under the `BreachDuration` period. 
 
-You 
+If you will like to have a maximum number of ports allowed before the `ActorSystem` is terminated you will want to lower this number.  
  
-The default number is set to 100 ports.  you want to s 
+***The default value*** is set to 65536 ports, which is the theoretical max allowed number of ports you can have on one endpoint. Please note you want the `MaxPorts` to be larger than your `MinPorts`.
 
-MaxDifference: Thi
+**MinPorts**: When a particular endpoint port count exceeds this number the `TcpPortUseSupervisor` will begin calculating the EWMA to see if a large increase is detected. 
+
+You will want to set this number above the normal expected port count you will expect for your system.
+
+***The default value*** set for this is for 100. 
+
+**MaxDifference**: This will signal the max difference between the short sample EWMA and the long sample EWMA. If the difference between the two EMWA remains above `MaxDifference` for longer than the set `BreachDuration`, the system will be terminated. 
+
+The faster the growth in TCP, the larger the difference you will see between these two. You will want to set this number to a lower value if want your system to be more sensitive to fast change. 
+
+***The default value*** set for this is for 0.20, which signals a 20% difference between the two averages. 
+
+
+**LargeSampleSize**: This will be the set sample sized used for the large sample EMWA. The higher this number the less responsive the EMWA will be to change. 
+
+***The default value*** will be for a sample size of 50. 
+
+**SmallSampleSize**: This will be the set sample sized used for the sample sample EMWA. The lower this number more responsive the EMWA will be to change. 
+
+***The default value*** will be for a sample size of 10. 
+
+**Important note about setting your LargeSampleSize and SmallSampleSize**: The closer these values are to each other, the faster the change in TCP growth will have to be for us to see a percent difference between the short sample EWMA and large sample EWMA. The higher the number for these values, the less responsive they will be to change and the higher the growth you will need to see. 
+
+**PortCheckInterval**: The interval at which we would like to sample the TCP port count. The shorter the interval the less responsive the system will be to change. 
+
+***The default value*** will be of 1 second. 
+
+
+
+**BreachDuration**: The max time you would like to give the system to recover from an observed TCP port growth, if the `MaxDifference` or the `MaxPorts` are exceeded. If either are exceeded and the system does not fall below the `MaxDifference` or `MaxPorts`respectively, the `ActorSystem` will be terminated. 
+
+
+***The default value*** will be for 25 seconds. 
+
+
+##Setting up the TcpPortUseSupervisor actor
+
+The three different ways to setup your actor can be seeing below: 
+
+**Setting up your actor with default settings and for it to monitor all local endpoints**
+
+```csharp
+			var actorSystem = ActorSystem.Create("PortDetector", "akka.loglevel = DEBUG"); 
+            var supervisor = actorSystem.ActorOf(Props.Create(() => new TcpPortUseSupervisor()), "tcpPorts");
+            var tcp = actorSystem.ActorOf(Props.Create(() => new TcpHostActor()), "tcp");
+            await actorSystem.WhenTerminated;
+```
+
+**Setting up your actor with customized settings and have it monitor all local endpoints**
+
+```csharp
+			var actorSystem = ActorSystem.Create("PortDetector", "akka.loglevel = DEBUG"); 
+			var 
+
+
+            var supervisor = actorSystem.ActorOf(Props.Create(() => new TcpPortUseSupervisor()), "tcpPorts");
+            var tcp = actorSystem.ActorOf(Props.Create(() => new TcpHostActor()), "tcp");
+            await actorSystem.WhenTerminated;
+```
 
